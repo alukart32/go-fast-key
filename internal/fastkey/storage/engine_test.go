@@ -14,21 +14,13 @@ func TestEngine_Set(t *testing.T) {
 		v string
 	}
 	tests := []struct {
-		name     string
-		eng      *storage.Engine
-		args     pair
-		testData pair
-		wantErr  error
+		name        string
+		eng         *storage.Engine
+		args        pair
+		testData    pair
+		setTestData bool
+		wantErr     error
 	}{
-		{
-			name: "Nil engine",
-			eng:  nil,
-			args: pair{
-				k: "key",
-				v: "val",
-			},
-			wantErr: storage.ErrStandByEngine,
-		},
 		{
 			name: "Empty key",
 			eng:  storage.NewEngine(0),
@@ -54,6 +46,7 @@ func TestEngine_Set(t *testing.T) {
 				k: "key",
 				v: "val_2",
 			},
+			setTestData: true,
 			testData: pair{
 				k: "key",
 				v: "val_1",
@@ -64,21 +57,20 @@ func TestEngine_Set(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			zeroTestData := pair{}
-			if tt.testData != zeroTestData {
+			if tt.setTestData {
 				require.NoError(t, tt.eng.Set(tt.testData.k, tt.testData.v))
 			}
 
 			err := tt.eng.Set(tt.args.k, tt.args.v)
-			if err != nil && tt.wantErr != nil {
-				assert.ErrorIs(t, err, tt.wantErr, "Engine.Set() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr != nil {
+				assert.Equal(t, err, tt.wantErr, "Set() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			require.NoError(t, err, "Engine.Set() error = %v, want nil error", err)
+			require.NoError(t, err, "Set() error = %v, want nil error", err)
 
 			gotVal, err := tt.eng.Get(tt.args.k)
-			require.NoError(t, err, "Engine.Get() error = %v for %v key", err, tt.args.k)
-			assert.EqualValues(t, tt.args.v, gotVal, "Engine.Get() got %v by %v key, want %v", gotVal, tt.args.k, tt.args.v)
+			require.NoError(t, err, "Get() error = %v for %v key", err, tt.args.k)
+			assert.EqualValues(t, tt.args.v, gotVal, "Get() got %v by %v key, want %v", gotVal, tt.args.k, tt.args.v)
 		})
 	}
 }
@@ -89,19 +81,14 @@ func TestEngine_Get(t *testing.T) {
 		v string
 	}
 	tests := []struct {
-		name     string
-		key      string
-		eng      *storage.Engine
-		testData pair
-		want     string
-		wantErr  error
+		name        string
+		key         string
+		eng         *storage.Engine
+		testData    pair
+		setTestData bool
+		want        string
+		wantErr     error
 	}{
-		{
-			name:    "Nil engine",
-			key:     "key",
-			eng:     nil,
-			wantErr: storage.ErrStandByEngine,
-		},
 		{
 			name:    "Empty key",
 			key:     "",
@@ -117,9 +104,10 @@ func TestEngine_Get(t *testing.T) {
 			wantErr: storage.ErrNotFound,
 		},
 		{
-			name: "Found by key",
-			key:  "key",
-			eng:  storage.NewEngine(0),
+			name:        "Found by key",
+			key:         "key",
+			eng:         storage.NewEngine(0),
+			setTestData: true,
 			testData: pair{
 				k: "key",
 				v: "val",
@@ -130,18 +118,18 @@ func TestEngine_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			zeroTestData := pair{}
-			if tt.testData != zeroTestData {
+			if tt.setTestData {
 				require.NoError(t, tt.eng.Set(tt.testData.k, tt.testData.v))
 			}
 
 			got, err := tt.eng.Get(tt.key)
-			if err != nil && tt.wantErr != nil {
-				assert.ErrorIs(t, err, tt.wantErr, "Engine.Get() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr != nil {
+				assert.Equal(t, err, tt.wantErr, "Get() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			require.NoError(t, err, "Engine.Get() error = %v for %v key", err, tt.key)
-			assert.EqualValues(t, tt.want, got, "Engine.Get() got %v by %v key, want %v", got, tt.key, tt.want)
+
+			require.NoError(t, err, "Get() error = %v for %v key", err, tt.key)
+			assert.EqualValues(t, tt.want, got, "Get() got %v by %v key, want %v", got, tt.key, tt.want)
 		})
 	}
 }
@@ -152,18 +140,13 @@ func TestEngine_Del(t *testing.T) {
 		v string
 	}
 	tests := []struct {
-		name     string
-		key      string
-		eng      *storage.Engine
-		testData pair
-		wantErr  error
+		name        string
+		key         string
+		eng         *storage.Engine
+		testData    pair
+		setTestData bool
+		wantErr     error
 	}{
-		{
-			name:    "Nil engine",
-			key:     "key",
-			eng:     nil,
-			wantErr: storage.ErrStandByEngine,
-		},
 		{
 			name:    "Empty key",
 			key:     "",
@@ -171,9 +154,10 @@ func TestEngine_Del(t *testing.T) {
 			wantErr: storage.ErrInvalidEntityID,
 		},
 		{
-			name: "Deleted by key",
-			key:  "key",
-			eng:  storage.NewEngine(0),
+			name:        "Deleted by key",
+			key:         "key",
+			eng:         storage.NewEngine(0),
+			setTestData: true,
 			testData: pair{
 				k: "key",
 				v: "val",
@@ -183,21 +167,20 @@ func TestEngine_Del(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			zeroTestData := pair{}
-			if tt.testData != zeroTestData {
+			if tt.setTestData {
 				require.NoError(t, tt.eng.Set(tt.testData.k, tt.testData.v))
 			}
 
 			err := tt.eng.Del(tt.key)
-			if err != nil && tt.wantErr != nil {
-				assert.ErrorIs(t, err, tt.wantErr, "Engine.Del() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr != nil {
+				assert.Equal(t, err, tt.wantErr, "Del() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			require.NoError(t, err, "Engine.Del() error = %v for %v key", err, tt.key)
 
+			require.NoError(t, err, "Del() error = %v for %v key", err, tt.key)
 			_, err = tt.eng.Get(tt.key)
 			require.ErrorIs(t, err, storage.ErrNotFound,
-				"Engine.Get() error = %v for %v key, want %v", err, tt.key, storage.ErrNotFound)
+				"Get() error = %v for %v key, want %v", err, tt.key, storage.ErrNotFound)
 		})
 	}
 }

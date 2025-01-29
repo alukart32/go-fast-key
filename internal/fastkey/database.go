@@ -1,7 +1,10 @@
 package fastkey
 
 import (
+	"fmt"
+
 	"github.com/alukart32/go-fast-key/internal/fastkey/compute"
+	"go.uber.org/zap"
 )
 
 // RequestParser describes the database query parser.
@@ -20,23 +23,34 @@ type Storage interface {
 type Database struct {
 	parser RequestParser
 	s      Storage
+
+	l *zap.Logger
 }
 
 // NewDatabase creates a new Database.
-func NewDatabase(parser RequestParser, db Storage) *Database {
+func NewDatabase(parser RequestParser, db Storage, logger *zap.Logger) (*Database, error) {
+	if parser == nil {
+		return nil, fmt.Errorf("parser is nil")
+	}
+	if db == nil {
+		return nil, fmt.Errorf("storage is nil")
+	}
+	if logger == nil {
+		return nil, fmt.Errorf("logger is nil")
+	}
+
 	return &Database{
 		parser: parser,
 		s:      db,
-	}
+		l:      logger,
+	}, nil
 }
 
 // HandleRequest processes the incoming request and returns the query result.
 //
 // Errors occur due to an incorrect query or inconsistent data.
 func (db *Database) HandleRequest(request string) (string, error) {
-	if db == nil {
-		return "", ErrStandBy
-	}
+	db.l.Debug("handle the request", zap.String("request", request))
 
 	query, err := db.parser.Parse(request)
 	if err != nil {

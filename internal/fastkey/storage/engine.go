@@ -17,9 +17,6 @@ func NewEngine(cap int) *Engine {
 
 // Set sets a new key-value pair.
 func (e *Engine) Set(k, v string) error {
-	if e == nil {
-		return ErrStandByEngine
-	}
 	if len(k) == 0 {
 		return ErrInvalidEntityID
 	}
@@ -33,9 +30,6 @@ func (e *Engine) Set(k, v string) error {
 
 // Get finds and returns a value by key.
 func (e *Engine) Get(k string) (string, error) {
-	if e == nil {
-		return "", ErrStandByEngine
-	}
 	if len(k) == 0 {
 		return "", ErrInvalidEntityID
 	}
@@ -49,9 +43,6 @@ func (e *Engine) Get(k string) (string, error) {
 
 // Del deletes the value by key.
 func (e *Engine) Del(k string) error {
-	if e == nil {
-		return ErrStandByEngine
-	}
 	if len(k) == 0 {
 		return ErrInvalidEntityID
 	}

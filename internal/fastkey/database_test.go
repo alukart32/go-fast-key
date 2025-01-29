@@ -10,6 +10,7 @@ import (
 	"github.com/alukart32/go-fast-key/internal/fastkey/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestDatabase_HandleRequest(t *testing.T) {
@@ -22,14 +23,6 @@ func TestDatabase_HandleRequest(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name:    "Database is nil",
-			request: "",
-			parser:  nil,
-			storage: nil,
-			want:    "",
-			wantErr: fastkey.ErrStandBy,
-		},
-		{
 			name:    "Handle command with parser error",
 			request: "TRUNCATE key",
 			parser: func() fastkey.RequestParser {
@@ -40,7 +33,7 @@ func TestDatabase_HandleRequest(t *testing.T) {
 					Once()
 				return m
 			},
-			storage: func() fastkey.Storage { return nil },
+			storage: func() fastkey.Storage { return fastkey_mocks.NewStorage(t) },
 			want:    "",
 			wantErr: fmt.Errorf("parser error"),
 		},
@@ -168,21 +161,67 @@ func TestDatabase_HandleRequest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var db *fastkey.Database
-			if tt.parser != nil || tt.storage != nil {
-				db = fastkey.NewDatabase(tt.parser(), tt.storage())
-			}
+			db, err := fastkey.NewDatabase(tt.parser(), tt.storage(), zap.NewNop())
+			require.NoError(t, err)
 
 			got, err := db.HandleRequest(tt.request)
-			if err != nil && tt.wantErr != nil {
-				assert.EqualErrorf(t, err, tt.wantErr.Error(),
-					"Engine.Set() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			require.NoError(t, err, "Database.HandleRequest() error = %v", err)
+			assert.Equal(t, err, tt.wantErr, "HandleRequest() error = %v, wantErr %v", err, tt.wantErr)
+			assert.True(t, got == tt.want, "HandleRequest() = %v, want %v", got, tt.want)
+		})
+	}
+}
 
-			if got != tt.want {
-				t.Errorf("Database.HandleRequest() = %v, want %v", got, tt.want)
+func TestNewDatabase(t *testing.T) {
+	tests := []struct {
+		name          string
+		parser        fastkey.RequestParser
+		db            fastkey.Storage
+		logger        *zap.Logger
+		wantErr       error
+		wantNilObject bool
+	}{
+		{
+			name:          "Create without parser",
+			parser:        nil,
+			db:            fastkey_mocks.NewStorage(t),
+			logger:        zap.NewNop(),
+			wantErr:       fmt.Errorf("parser is nil"),
+			wantNilObject: true,
+		},
+		{
+			name:          "Create without storage",
+			parser:        fastkey_mocks.NewRequestParser(t),
+			db:            nil,
+			logger:        zap.NewNop(),
+			wantErr:       fmt.Errorf("storage is nil"),
+			wantNilObject: true,
+		},
+		{
+			name:          "Create without logger",
+			parser:        fastkey_mocks.NewRequestParser(t),
+			db:            fastkey_mocks.NewStorage(t),
+			logger:        nil,
+			wantErr:       fmt.Errorf("logger is nil"),
+			wantNilObject: true,
+		},
+		{
+			name:          "Created",
+			parser:        fastkey_mocks.NewRequestParser(t),
+			db:            fastkey_mocks.NewStorage(t),
+			logger:        zap.NewNop(),
+			wantErr:       nil,
+			wantNilObject: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := fastkey.NewDatabase(tt.parser, tt.db, tt.logger)
+
+			assert.Equal(t, err, tt.wantErr, "NewDatabase() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantNilObject {
+				assert.Nil(t, got)
+			} else {
+				assert.NotNil(t, got)
 			}
 		})
 	}
