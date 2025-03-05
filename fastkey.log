@@ -1,0 +1,82 @@
+{"request":"GET k1\n"}
+{"request":"GET k2\n"}
+{"request":"SET k1 v1\n"}
+{"request":""}
+{"request":""}
+{"request":""}
+{"request":""}
+{"address":"127.0.0.1:39086","error":"write tcp 127.0.0.1:8080->127.0.0.1:39086: write: broken pipe"}
+{"request":"SET k1 v1\n"}
+{"request":""}
+{"request":""}
+{"request":""}
+{"request":""}
+{"address":"127.0.0.1:43206","error":"write tcp 127.0.0.1:8080->127.0.0.1:43206: write: broken pipe"}
+{"request":"SET k2 v2\n"}
+{"request":""}
+{"request":""}
+{"request":""}
+{"request":""}
+{"address":"127.0.0.1:34886","error":"write tcp 127.0.0.1:8080->127.0.0.1:34886: write: broken pipe"}
+{"request":"GET k2\n"}
+{"request":"exit\n"}
+{"request":"exit\n"}
+{"request":""}
+{"request":""}
+{"request":""}
+{"request":""}
+{"address":"127.0.0.1:58986","error":"write tcp 127.0.0.1:8080->127.0.0.1:58986: write: broken pipe"}
+{"request":"exit\n"}
+{"request":"exit\n"}
+{"request":""}
+{"request":""}
+{"request":""}
+{"request":""}
+{"address":"127.0.0.1:35696","error":"write tcp 127.0.0.1:8080->127.0.0.1:35696: write: broken pipe"}
+{"request":"exit\n"}
+{"request":"exit\n"}
+{"request":"stop\n"}
+{"request":"stop\n"}
+{"request":"a\n"}
+{"request":"a\n"}
+{"request":"d\n"}
+{"request":"d\n"}
+{"request":"f\n"}
+{"request":"f\n"}
+{"request":"s\n"}
+{"request":"s\n"}
+{"request":"x\n"}
+{"request":"x\n"}
+{"request":"GET k2\n"}
+{"request":"DEL k2\n"}
+{"request":""}
+{"request":""}
+{"request":""}
+{"request":""}
+{"address":"127.0.0.1:36838","error":"write tcp 127.0.0.1:8080->127.0.0.1:36838: write: broken pipe"}
+{"request":"GET k2\n"}
+{"request":"DEL k1\n"}
+{"request":""}
+{"request":""}
+{"request":""}
+{"request":""}
+{"address":"127.0.0.1:37366","error":"write tcp 127.0.0.1:8080->127.0.0.1:37366: write: broken pipe"}
+{"request":"DEL k1\n"}
+{"request":""}
+{"request":""}
+{"request":""}
+{"request":""}
+{"address":"127.0.0.1:43776","error":"write tcp 127.0.0.1:8080->127.0.0.1:43776: write: broken pipe"}
+{"request":"DEL k3\n"}
+{"request":""}
+{"request":""}
+{"request":""}
+{"request":""}
+{"address":"127.0.0.1:38588","error":"write tcp 127.0.0.1:8080->127.0.0.1:38588: write: broken pipe"}
+{"request":"DEL k3\n"}
+{"request":"DEL k5\n"}
+{"request":"DEL k5\n"}
+{"request":"SET h1 v1\n"}
+{"request":"SET k1 v1\n"}
+{"request":"SET L1 K3\n"}
+{"request":"GET L1\n"}
