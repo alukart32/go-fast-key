@@ -51,12 +51,12 @@ func NewDatabase(parser RequestParser, engine Engine, logger *zap.Logger) (*Data
 // HandleRequest processes the incoming request and returns the query result.
 //
 // Errors occur due to an incorrect query or inconsistent data.
-func (db *Database) HandleRequest(request string) (string, error) {
+func (db *Database) HandleRequest(request string) string {
 	db.l.Debug("handle the request", zap.String("request", request))
 
 	query, err := db.parser.Parse(request)
 	if err != nil {
-		return "", err
+		return err.Error()
 	}
 
 	var result string
@@ -69,7 +69,14 @@ func (db *Database) HandleRequest(request string) (string, error) {
 		err = db.doDel(query)
 	}
 
-	return result, err
+	if err != nil {
+		result = err.Error()
+	}
+	if len(result) == 0 {
+		result = "ok"
+	}
+
+	return result
 }
 
 func (db *Database) doSet(q compute.Query) error {

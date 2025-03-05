@@ -49,12 +49,13 @@ func NewTCPServer(address string, logger *zap.Logger, options ...TCPServerOption
 	if server.bufferSize == 0 {
 		server.bufferSize = 4 << 10
 	}
+	server.semaphore = concurrency.NewSemaphore(server.maxConnections)
 
 	return server, nil
 }
 
 func (s *TCPServer) HandleQueries(ctx context.Context, handler TCPHandler) {
-	if s == nil {
+	if s == nil || handler == nil {
 		return
 	}
 
@@ -76,10 +77,11 @@ func (s *TCPServer) HandleQueries(ctx context.Context, handler TCPHandler) {
 			}
 
 			s.semaphore.Acquire()
-			go func(conn net.Conn) {
+			s.logger.Debug("accept new connection", zap.String("address", conn.LocalAddr().String()))
+			go func() {
 				defer s.semaphore.Release()
 				s.handleConn(ctx, conn, handler)
-			}(conn)
+			}()
 		}
 	}()
 
@@ -87,8 +89,6 @@ func (s *TCPServer) HandleQueries(ctx context.Context, handler TCPHandler) {
 
 	s.listener.Close()
 	wg.Wait() // wait goroutine to shut down before all connections are closed.
-
-	return
 }
 
 func (s *TCPServer) BufferSize() int {
@@ -112,6 +112,7 @@ func (s *TCPServer) handleConn(ctx context.Context, conn net.Conn, handler TCPHa
 		if err := conn.Close(); err != nil {
 			s.logger.Warn("fail to close connection", zap.Error(err))
 		}
+		s.logger.Debug("connection is closed", zap.String("address", conn.LocalAddr().String()))
 	}()
 
 	// reuse buffer for requests
@@ -144,6 +145,8 @@ func (s *TCPServer) handleConn(ctx context.Context, conn net.Conn, handler TCPHa
 				break
 			}
 		}
+
+		s.logger.Debug("read connection", zap.String("data", string(request[:count])))
 
 		response := handler(ctx, request[:count])
 		if _, err := conn.Write(response); err != nil {

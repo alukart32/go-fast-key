@@ -36,6 +36,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("App is created")
 
 	if err := app.Run(ctx); err != nil {
 		log.Fatal(err)

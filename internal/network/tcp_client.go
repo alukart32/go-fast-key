@@ -9,7 +9,7 @@ import (
 )
 
 type TCPClient struct {
-	connection  net.Conn
+	conn        net.Conn
 	idleTimeout time.Duration
 	bufferSize  int
 }
@@ -21,7 +21,7 @@ func NewTCPClient(address string, options ...TCPClientOption) (*TCPClient, error
 	}
 
 	client := &TCPClient{
-		connection: connection,
+		conn:       connection,
 		bufferSize: defaultBufferSize,
 	}
 
@@ -39,12 +39,12 @@ func NewTCPClient(address string, options ...TCPClientOption) (*TCPClient, error
 }
 
 func (c *TCPClient) Send(request []byte) ([]byte, error) {
-	if _, err := c.connection.Write(request); err != nil {
+	if _, err := c.conn.Write(request); err != nil {
 		return nil, err
 	}
 
 	response := make([]byte, c.bufferSize)
-	count, err := c.connection.Read(response)
+	count, err := c.conn.Read(response)
 	if err != nil && err != io.EOF {
 		return nil, err
 	} else if count == c.bufferSize {
@@ -62,8 +62,15 @@ func (c *TCPClient) IdleTimeout() time.Duration {
 	return c.idleTimeout
 }
 
+func (c *TCPClient) RefreshDeadline() error {
+	if err := c.conn.SetDeadline(time.Now().Add(c.idleTimeout)); err != nil {
+		return fmt.Errorf("fail to set deadline for connection: %w", err)
+	}
+	return nil
+}
+
 func (c *TCPClient) Close() {
-	if c.connection != nil {
-		_ = c.connection.Close()
+	if c.conn != nil {
+		_ = c.conn.Close()
 	}
 }

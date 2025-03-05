@@ -20,7 +20,6 @@ func TestDatabase_HandleRequest(t *testing.T) {
 		parser  func() database.RequestParser
 		storage func() database.Engine
 		want    string
-		wantErr error
 	}{
 		{
 			name:    "Handle command with parser error",
@@ -34,8 +33,7 @@ func TestDatabase_HandleRequest(t *testing.T) {
 				return m
 			},
 			storage: func() database.Engine { return database_mocks.NewStorage(t) },
-			want:    "",
-			wantErr: fmt.Errorf("parser error"),
+			want:    "parser error",
 		},
 		{
 			name:    "Valid SET query",
@@ -51,8 +49,7 @@ func TestDatabase_HandleRequest(t *testing.T) {
 				m.On("Set", "key", "val").Return(nil).Once()
 				return m
 			},
-			want:    "",
-			wantErr: nil,
+			want: "",
 		},
 		{
 			name:    "SET query with storage error",
@@ -68,8 +65,7 @@ func TestDatabase_HandleRequest(t *testing.T) {
 				m.On("Set", "key", "val").Return(fmt.Errorf("storage error")).Once()
 				return m
 			},
-			want:    "",
-			wantErr: fmt.Errorf("storage error"),
+			want: "storage error",
 		},
 		{
 			name:    "Valid GET query",
@@ -86,8 +82,7 @@ func TestDatabase_HandleRequest(t *testing.T) {
 				m.On("Get", "key").Return("val", nil).Once()
 				return m
 			},
-			want:    "val",
-			wantErr: nil,
+			want: "val",
 		},
 		{
 			name:    "GET query with storage error",
@@ -103,8 +98,7 @@ func TestDatabase_HandleRequest(t *testing.T) {
 				m.On("Get", "key").Return("", fmt.Errorf("storage error")).Once()
 				return m
 			},
-			want:    "",
-			wantErr: fmt.Errorf("storage error"),
+			want: "storage error",
 		},
 		{
 			name:    "GET query with not found error",
@@ -120,8 +114,7 @@ func TestDatabase_HandleRequest(t *testing.T) {
 				m.On("Get", "key").Return("", engine.ErrNotFound).Once()
 				return m
 			},
-			want:    "",
-			wantErr: engine.ErrNotFound,
+			want: engine.ErrNotFound.Error(),
 		},
 		{
 			name:    "Valid DEL query",
@@ -138,8 +131,7 @@ func TestDatabase_HandleRequest(t *testing.T) {
 				m.On("Del", "key").Return(nil).Once()
 				return m
 			},
-			want:    "",
-			wantErr: nil,
+			want: "",
 		},
 		{
 			name:    "DEL query with storage error",
@@ -155,8 +147,7 @@ func TestDatabase_HandleRequest(t *testing.T) {
 				m.On("Del", "key").Return(fmt.Errorf("storage error")).Once()
 				return m
 			},
-			want:    "",
-			wantErr: fmt.Errorf("storage error"),
+			want: "storage error",
 		},
 	}
 	for _, tt := range tests {
@@ -164,8 +155,7 @@ func TestDatabase_HandleRequest(t *testing.T) {
 			db, err := database.NewDatabase(tt.parser(), tt.storage(), zap.NewNop())
 			require.NoError(t, err)
 
-			got, err := db.HandleRequest(tt.request)
-			assert.Equal(t, err, tt.wantErr, "HandleRequest() error = %v, wantErr %v", err, tt.wantErr)
+			got := db.HandleRequest(tt.request)
 			assert.True(t, got == tt.want, "HandleRequest() = %v, want %v", got, tt.want)
 		})
 	}

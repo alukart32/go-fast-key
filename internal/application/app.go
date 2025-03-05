@@ -66,16 +66,16 @@ func (a *App) Run(ctx context.Context) error {
 	go func() {
 		defer wg.Done()
 		a.server.HandleQueries(ctx, func(_ context.Context, request []byte) []byte {
-			response, err := db.HandleRequest(string(request))
-			if err != nil {
-				return []byte(err.Error())
-			}
+			response := db.HandleRequest(string(request))
 			return []byte(response)
 		})
 	}()
 
-	wg.Wait()
+	a.logger.Info("App is running")
 
+	wg.Wait()
 	a.logger.Sync()
+
+	a.logger.Info("App is down")
 	return err
 }

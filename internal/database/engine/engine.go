@@ -1,8 +1,11 @@
 package engine
 
+import "sync"
+
 // MemEngine defines a key-value data store.
 type MemEngine struct {
-	m map[string]string
+	mtx sync.Mutex
+	m   map[string]string
 }
 
 // NewMemEngine creates a new Engine.
@@ -24,7 +27,9 @@ func (e *MemEngine) Set(k, v string) error {
 		return ErrInvalidEntityData
 	}
 
+	e.mtx.Lock()
 	e.m[k] = v
+	e.mtx.Unlock()
 	return nil
 }
 
@@ -33,6 +38,9 @@ func (e *MemEngine) Get(k string) (string, error) {
 	if len(k) == 0 {
 		return "", ErrInvalidEntityID
 	}
+
+	e.mtx.Lock()
+	defer e.mtx.Unlock()
 
 	if val, found := e.m[k]; !found {
 		return "", ErrNotFound

@@ -15,9 +15,9 @@ import (
 )
 
 func main() {
-	address := flag.String("address", "127.0.0.1:8080", "Address of the spider")
+	address := flag.String("address", "localhost:8080", "Address of the spider")
 	idleTimeout := flag.Duration("idle_timeout", time.Minute, "Idle timeout for connection")
-	maxMessageSizeStr := flag.String("max_message_size", "8KB", "Max message size for connection")
+	maxMessageSizeStr := flag.String("max_message_size", "4KB", "Max message size for connection")
 	flag.Parse()
 
 	logger, _ := zap.NewDevelopment()
@@ -44,9 +44,6 @@ func main() {
 		} else if err != nil {
 			logger.Error("fail to read query", zap.Error(err))
 		}
-		if request == "exit" {
-			break
-		}
 
 		response, err := client.Send([]byte(request))
 		logger.Info("response", zap.String("response", string(response)), zap.Error(err))
@@ -57,5 +54,7 @@ func main() {
 		}
 
 		fmt.Println(string(response))
+
+		client.RefreshDeadline()
 	}
 }

@@ -5,7 +5,7 @@ import "sync"
 type Semaphore struct {
 	count int
 	max   int
-	cond  sync.Cond
+	cond  *sync.Cond
 }
 
 func NewSemaphore(limit int) *Semaphore {
@@ -14,7 +14,7 @@ func NewSemaphore(limit int) *Semaphore {
 	}
 	return &Semaphore{
 		max:  limit,
-		cond: *sync.NewCond(&sync.Mutex{}),
+		cond: sync.NewCond(&sync.Mutex{}),
 	}
 }
 
